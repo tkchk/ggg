@@ -1,0 +1,5 @@
+- hosts: k3s
+  become: yes
+  roles:
+    - packages
+    - zabbix-agent

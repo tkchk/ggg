@@ -1,0 +1,27 @@
+- name: Download zabbix GPG key
+  ansible.builtin.get_url:
+    url: https://repo.zabbix.com/zabbix-official-repo-apr2024.gpg
+    dest: /usr/share/keyrings/zabbix.gpg
+    mode: '0644'
+
+- name: Add zabbix repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/zabbix.gpg] http://repo.zabbix.com/zabbix/7.2/stable/debian {{ ansible_distribution_release }} main"
+    update_cache: true
+    state: present
+  when: ansible_distribution == "Debian"
+
+- name: Install zabbix package
+  ansible.builtin.apt:
+    name: zabbix-agent2
+    state: present
+    update_cache: true
+
+- name: Deploy zabbix-agent2 configuration file
+  ansible.builtin.template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+  vars:
+    zabbix_server: "pi.local"
+  notify:
+    - Restart zabbix-agent2

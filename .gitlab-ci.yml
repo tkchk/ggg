@@ -1,0 +1,33 @@
+# Two stages - build the container and push it. And, trigger helm upgrade to deploy it.
+# Additional curls are there to sent a report that the build and deploy are successful or failed.
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker build -t debian12.local/nc1-test/backend:$CI_COMMIT_SHORT_SHA ./
+    - docker login debian12.local -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+    - docker push debian12.local/nc1-test/backend:$CI_COMMIT_SHORT_SHA
+    - curl "http://sender.local/send?message=nc1-test%2Fbackend:$CI_COMMIT_SHORT_SHA%20build%20OK"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "failed" ]; then
+        curl "http://sender.local/send?message=nc1-test%2Fbackend:$CI_COMMIT_SHORT_SHA%20build%20FAILED"
+      fi
+
+deploy:
+  stage: deploy
+  image:
+    name: bitnami/kubectl
+  script:
+    - sed -i "s/latest/$CI_COMMIT_SHORT_SHA/g" nc1-backend-chart/values.yaml
+    - helm upgrade -i -n nc1 nc1-backend nc1-backend-chart/ --values nc1-backend-chart/values.yaml
+    - curl "http://sender.local/send?message=nc1-test%2Fbackend:$CI_COMMIT_SHORT_SHA%20deploy%20OK"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "failed" ]; then
+        curl "http://sender.local/send?message=nc1-test%2Fbackend:$CI_COMMIT_SHORT_SHA%20deploy%20FAILED"
+      fi

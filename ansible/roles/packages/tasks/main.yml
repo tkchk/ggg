@@ -1,0 +1,31 @@
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - telnet
+      - net-tools
+      - htop
+      - strace
+      - autoconf
+      - automake
+      - btop
+      - cmake
+      - curl
+      - gdb
+      - git
+      - iptables
+      - make
+      - nmap
+      - pwgen
+      - python3
+      - rsync
+      - socat
+      - tcpdump
+      - mtr
+      - tree
+      - whois
+      - screen
+      - gpg
+      - wget
+      - cloud-utils
+    state: present
+    update_cache: yes
